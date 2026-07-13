@@ -67,12 +67,34 @@ cp -R trust-issues ~/.claude/skills/
 
 Then ask for it by name: *"review this before I install it: <url>."* It also triggers on its own when you go to clone, install, or connect something you didn't write.
 
-## Using the scanner on its own
+## How to use it
+
+**The main use: you found a skill or repo on GitHub and want to check it before installing.**
+Inside Claude (Code, Desktop, or Cowork) with the skill installed:
+
+1. Copy the repo's URL, for example `https://github.com/someone/cool-skill`.
+2. Paste it to Claude and say: *"review this repo for malware before I install it: <url>"* (or just *"Trust Issues this: <url>"*).
+3. Claude clones it read-only, runs the scanner and the five-persona review, and replies with a **GO / GO WITH MITIGATIONS / NO-GO** verdict and the findings behind it.
+4. Install it only if the verdict is GO — or GO WITH MITIGATIONS once you've applied the mitigations it lists.
+
+You never run the target's code during this. Reviewing is not installing.
+
+**You found code somewhere else** (a gist, a downloaded zip, an npm or pip package). Same move:
+point Claude at it with *"review this before I run it: <url or path>"*. For a zip, unzip it into a
+throwaway folder first (not your projects directory), then give Claude that folder path.
+
+**You just want the fast terminal scan, without Claude.** The scanner is a standalone, read-only script:
 
 ```bash
-bash scripts/triage_scan.sh /path/to/some/repo
+# 1. clone the target into a sandbox folder, NOT your working tree
+git clone --depth 1 https://github.com/someone/cool-skill /tmp/review-target
+
+# 2. run the scanner — it only reads files, it never executes them
+bash scripts/triage_scan.sh /tmp/review-target
 ```
-It only reads files. A clean result means the fast pass found nothing obvious, so the manual read still matters.
+
+Read the flagged categories. A clean result means the fast pass found nothing obvious, not that the
+code is safe — for a real decision, run the full review in Claude.
 
 ## One rule worth repeating
 
