@@ -11,11 +11,19 @@
 # It does NO online research. The "research current threats" step in SKILL.md is
 # performed by the agent or human running the full workflow, not by this script.
 #
-# For a hostile or very large target, bound the wall-clock time yourself, e.g.:
+# Optional resource limits (env vars, with sensible defaults):
+#     TRUST_ISSUES_MAX_BYTES  per-file byte ceiling for the binary pass (default 5 MiB)
+#     TRUST_ISSUES_MAX_FILES  file-count ceiling; over this the scan warns (default 50000)
+#     TRUST_ISSUES_STRICT=1   abort (exit 3) instead of warning when the ceiling is hit
+#
+# Note on limits: a per-file size cap for the recursive content grep and an internal
+# wall-clock deadline are NOT enforced here — neither is portable across GNU and BSD
+# userlands in pure bash. For a hostile or very large target, run inside a sandbox and
+# bound the wall-clock time yourself, e.g.:
 #     timeout 120 bash triage_scan.sh <path>
 #
 # Usage:  bash triage_scan.sh <path-to-repo>
-# Exit:   0 = ran (triage is informational, not a gate); 2 = bad arguments.
+# Exit:   0 = ran (triage is informational, not a gate); 2 = bad arguments; 3 = over limit in strict mode.
 
 set -uo pipefail
 
@@ -35,7 +43,9 @@ if ! TARGET="$(cd -- "$TARGET" 2>/dev/null && pwd -P)"; then
   echo "error: cannot access target" >&2; exit 2
 fi
 
-MAX_BYTES=$((5 * 1024 * 1024))   # skip files larger than 5 MB in the binary pass
+MAX_BYTES="${TRUST_ISSUES_MAX_BYTES:-$((5 * 1024 * 1024))}"   # per-file cap, binary pass
+MAX_FILES="${TRUST_ISSUES_MAX_FILES:-50000}"                  # file-count ceiling
+STRICT="${TRUST_ISSUES_STRICT:-0}"
 PRUNE=( -path '*/.git/*' -o -path '*/node_modules/*' -o -path '*/vendor/*'
         -o -path '*/dist/*' -o -path '*/build/*' -o -path '*/.venv/*'
         -o -path '*/venv/*' -o -path '*/.next/*' -o -path '*/target/*' )
@@ -59,16 +69,20 @@ g(){ grep -rInI "${EXCLUDES[@]}" "$@" -- "$TARGET" 2>/dev/null; }
 # go(): value-only extraction (-o, no path prefix) for de-duplication by callers.
 go(){ grep -rhoIE "${EXCLUDES[@]}" "$@" -- "$TARGET" 2>/dev/null; }
 
-# cap N: print up to N matching lines from stdin; if more exist, report the total.
+# cap N: stream stdin, print up to N matching lines, then report the true total.
+# Implemented in awk so it counts without buffering the whole input in memory —
+# important when scanning a purpose-built denial-of-service tree.
 cap(){
-  local n="${1:-10}" buf total
-  buf="$(cat)"
-  if [[ -z "$buf" ]]; then echo "  (none)"; return 0; fi
-  total="$(printf '%s\n' "$buf" | grep -c .)"
-  printf '%s\n' "$buf" | head -n "$n"
-  if (( total > n )); then echo "  … showing $n of $total matches"; fi
-  return 0
+  awk -v n="${1:-10}" '
+    { c++; if (c <= n) print }
+    END {
+      if (c == 0)      { print "  (none)" }
+      else if (c > n)  { printf "  … showing %d of %d matches\n", n, c }
+    }'
 }
+# strip non-printable characters from a displayed path (report-integrity: an
+# adversarial filename cannot smear the output). Does not affect what is scanned.
+clean_paths(){ LC_ALL=C sed 's/[^[:print:]]/?/g'; }
 
 # tfind: null-delimited find over the target, no symlink following, pruning the
 # vendor/generated dirs. Extra predicates are passed as arguments.
@@ -86,6 +100,12 @@ echo; echo "Largest files (watch for vendored blobs / minified bundles):"
 find -P "$TARGET" '(' "${PRUNE[@]}" ')' -prune -o -type f -exec wc -c {} + 2>/dev/null \
   | grep -vE '[[:space:]]total$' | sort -rn | head -10 \
   | awk '{n=$1; $1=""; sub(/^[[:space:]]+/,""); printf "  %12d  %s\n", n, $0}'
+NFILES="$(tfind -type f | tr -cd '\0' | wc -c | tr -d ' ')"
+echo; echo "Files in scope: $NFILES  (ceiling TRUST_ISSUES_MAX_FILES=$MAX_FILES)"
+if (( NFILES > MAX_FILES )); then
+  echo "  ⚠ over the file-count ceiling — content scans may be slow; run in a sandbox under 'timeout'."
+  if [[ "$STRICT" == 1 ]]; then echo "  strict mode: aborting."; exit 3; fi
+fi
 
 hr "2. NON-TEXT / BINARY / HIGH-ENTROPY BLOBS (unexplained binaries are a red flag)"
 bin_hits=""
@@ -97,9 +117,9 @@ while IFS= read -r -d '' f; do
     bin_hits+="  BINARY: $f -> $(file -b "$f" 2>/dev/null)"$'\n'
   fi
 done < <(tfind -type f)
-printf '%s' "$bin_hits" | cap 20
+printf '%s' "$bin_hits" | clean_paths | cap 20
 echo "  minified / bundled JS (can hide payloads):"
-tfind -type f '(' -name '*.min.js' -o -name '*bundle*.js' ')' | tr '\0' '\n' | sed 's/^/    /' | cap 10
+tfind -type f '(' -name '*.min.js' -o -name '*bundle*.js' ')' | tr '\0' '\n' | clean_paths | sed 's/^/    /' | cap 10
 
 hr "3. NPM INSTALL HOOKS (the #1 npm supply-chain vector — runs on 'npm install')"
 g --include=package.json -E '"(pre|post)?install"|"prepare"|"preprepare"|"postprepare"' | cap 15
@@ -149,7 +169,7 @@ fi
 hr "11. DEPENDENCY MANIFESTS (audit each for typosquats / unpinned / young packages)"
 tfind -type f '(' -name package.json -o -name 'requirements*.txt' -o -name Pipfile \
   -o -name pyproject.toml -o -name go.mod -o -name Cargo.toml -o -name Gemfile ')' \
-  | tr '\0' '\n' | sed 's/^/  /' | cap 20
+  | tr '\0' '\n' | clean_paths | sed 's/^/  /' | cap 20
 echo "  unpinned python deps (no '==') — supply-chain drift risk:"
 g --include=requirements*.txt -E '^[A-Za-z0-9._-]+\s*$' | cap 15
 
