@@ -27,10 +27,12 @@ jobs:
           bash -n scripts/triage_scan.sh
           bash -n benchmark/run_benchmark.sh
 
-      - name: Shellcheck (advisory)
+      # ubuntu-latest ships shellcheck preinstalled — no apt-get needed.
+      - name: Shellcheck (errors block the build; warnings are shown)
         run: |
-          sudo apt-get update && sudo apt-get install -y shellcheck
-          shellcheck -S warning scripts/triage_scan.sh benchmark/run_benchmark.sh || true
+          shellcheck --severity=error scripts/triage_scan.sh benchmark/run_benchmark.sh
+          shellcheck --severity=warning scripts/triage_scan.sh benchmark/run_benchmark.sh \
+            || echo "::warning::shellcheck reported non-error findings above"
 
       - name: Dogfood — scan this repo with its own scanner
         run: bash scripts/triage_scan.sh .

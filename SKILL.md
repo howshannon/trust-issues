@@ -78,12 +78,12 @@ do that? Note every gap between claimed purpose and actual capability.
 ```bash
 bash scripts/triage_scan.sh <path-to-repo>
 ```
-This is READ-ONLY (never executes the target). It surfaces candidates across 13
-categories: inventory, binaries/blobs, npm install hooks, curl|bash, dynamic
-exec/eval, base64/obfuscation, credential harvesting, network egress, leaked secrets,
-CI/CD risk, dependency manifests, agent/prompt-injection directives, and hidden
-unicode. Treat every hit as a lead to investigate, and remember a clean result proves
-nothing on its own.
+This is READ-ONLY (never executes the target) and does no online research. It surfaces
+candidates across 14 categories: inventory, binaries/blobs, npm install hooks,
+curl|bash, dynamic exec/eval, base64/obfuscation, credential harvesting, network egress,
+leaked secrets, CI/CD risk, dependency manifests, agent/prompt-injection directives,
+hidden unicode, and compiled-malware/injection/mining indicators. Treat every hit as a
+lead to investigate, and remember a clean result proves nothing on its own.
 
 ### 4. Manual adversarial read through five personas
 This is the core of the review — the scanner can't reason about intent, you can.
@@ -152,6 +152,6 @@ for manual follow-up; and the explicit verdict. Concentrated over exhaustive —
 sharp one-page report beats a 200-item checklist.
 
 ## Resources
-- `scripts/triage_scan.sh` — read-only static triage (13 categories).
+- `scripts/triage_scan.sh` — read-only static triage (14 categories).
 - `references/threat-catalog.md` — full threat taxonomy for the five personas.
 - `references/report-template.md` — required report + verdict format.

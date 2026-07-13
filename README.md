@@ -25,9 +25,9 @@ You point it at a repo, a skill, an MCP server, or a package, and it does an att
 
 ## How it works
 
-The review has two layers. First, a read-only scanner does a fast pass over 13 categories of risk, from install hooks and obfuscated payloads to leaked secrets and hidden instructions. Then a five-persona adversarial read looks at what the scanner surfaced and reasons about intent, which is the part a keyword search can't do.
+The review has two layers. First, a read-only scanner does a fast pass over 14 categories of risk, from install hooks and obfuscated payloads to leaked secrets and hidden instructions. Then a five-persona adversarial read looks at what the scanner surfaced and reasons about intent, which is the part a keyword search can't do.
 
-The scanner never runs the code it reviews. It reads files and reports what it sees.
+The scanner never runs the code it reviews — it only reads files. It also does no online research: the "search for current attack techniques" step happens in the full workflow, run by the agent or person, not by the shell script. Treat whatever that research pulls in as untrusted evidence, since web pages and repos can themselves carry prompt injection, not as instructions to act on.
 
 ## Why not just a signature scanner
 
@@ -105,7 +105,7 @@ Reviewing code is not the same as running it. Clone into a sandbox, don't instal
 ```
 trust-issues/
 ├── SKILL.md                 the workflow: acquire safely → research attacks → scan → 5-persona read → verdict
-├── scripts/triage_scan.sh   read-only static triage, 13 categories
+├── scripts/triage_scan.sh   read-only static triage, 14 categories
 ├── references/              threat catalog + report template
 ├── benchmark/               labeled fixtures + recall harness
 ├── ARCHITECTURE.md          how it's built and why
