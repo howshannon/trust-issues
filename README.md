@@ -67,6 +67,23 @@ cp -R trust-issues ~/.claude/skills/
 
 Then ask for it by name: *"review this before I install it: <url>."* It also triggers on its own when you go to clone, install, or connect something you didn't write.
 
+## Staying up to date
+
+Install as a live checkout, then pull whenever you want the newest version:
+
+```bash
+rm -rf ~/.claude/skills/trust-issues
+git clone https://github.com/howshannon/trust-issues ~/.claude/skills/trust-issues
+```
+
+To update later, run:
+
+```bash
+git -C ~/.claude/skills/trust-issues pull
+```
+
+Restart your agent (or run `/reload-plugins` in Claude Code) to pick up the changes.
+
 ## How to use it
 
 **The main use: you found a skill or repo on GitHub and want to check it before installing.**
