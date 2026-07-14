@@ -1,0 +1,10 @@
+{
+  "name": "trust-issues",
+  "version": "1.0.0",
+  "description": "Adversarial, attacker-minded security review of untrusted code before you install it. A read-only scanner plus a five-persona reasoning pass, ending in a GO / GO-WITH-MITIGATIONS / NO-GO verdict.",
+  "author": { "name": "howshannon", "url": "https://github.com/howshannon" },
+  "homepage": "https://github.com/howshannon/trust-issues",
+  "repository": "https://github.com/howshannon/trust-issues",
+  "license": "MIT",
+  "keywords": ["security","code-review","malware-detection","ai-security","prompt-injection","supply-chain-security","claude-skills","codex"]
+}

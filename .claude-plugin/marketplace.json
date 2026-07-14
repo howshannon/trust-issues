@@ -1,0 +1,20 @@
+{
+  "name": "trust-issues",
+  "owner": { "name": "howshannon", "url": "https://github.com/howshannon" },
+  "metadata": {
+    "description": "Adversarial security review for AI skills, repos, MCP servers, and packages before you install them.",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "trust-issues",
+      "source": "./",
+      "description": "Adversarial, attacker-minded security review of untrusted code (agent skills, MCP servers, plugins, npm/pip packages) before you install it. A read-only scanner plus a five-persona reasoning pass, ending in a GO / GO-WITH-MITIGATIONS / NO-GO verdict.",
+      "version": "1.0.0",
+      "author": { "name": "howshannon", "url": "https://github.com/howshannon" },
+      "homepage": "https://github.com/howshannon/trust-issues",
+      "license": "MIT",
+      "keywords": ["security","code-review","malware-detection","ai-security","prompt-injection","supply-chain-security","claude-skills","codex"]
+    }
+  ]
+}
