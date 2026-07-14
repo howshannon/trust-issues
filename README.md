@@ -57,6 +57,13 @@ That last lens is the one generic code review skips, and it's the most important
 
 ## Install
 
+**Any agent — one command.** Works with Claude Code, Codex, Cursor, and other agents that support the open Agent Skills standard:
+
+```bash
+npx skills add howshannon/trust-issues
+```
+
+
 **Claude Code**
 ```bash
 git clone https://github.com/howshannon/trust-issues
