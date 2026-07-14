@@ -63,6 +63,12 @@ git clone https://github.com/howshannon/trust-issues
 cp -R trust-issues ~/.claude/skills/
 ```
 
+**Claude Code — plugin marketplace**
+```
+/plugin marketplace add howshannon/trust-issues
+/plugin install trust-issues@trust-issues
+```
+
 **Claude Desktop / Cowork / claude.ai** — open Settings → Capabilities (or Skills) and add or upload the skill. You can also zip the folder as `trust-issues.skill` and use the Save-skill button.
 
 Then ask for it by name: *"review this before I install it: <url>."* It also triggers on its own when you go to clone, install, or connect something you didn't write.
