@@ -35,7 +35,11 @@ Signature scanners exist, and they have a documented weakness. When researchers 
 
 ## The benchmark
 
-Most scanners quote an accuracy number without publishing the test set behind it. This one ships the test corpus so you can verify the number. Against 11 known-malicious fixtures and 8 benign ones, the scanner flags 10 of the 11. The sample it misses was built specifically to defeat pattern matching, and the miss is reported on purpose, because that case is what argues for the human read. Four of the benign fixtures also get surfaced for review, which is the expected cost of tuning the scanner for high recall.
+Most scanners quote an accuracy number without publishing the test set behind it. This one ships the corpus so you can verify it, and it reports **both recall and false positives** — because a scanner that catches malware but flags every benign install hook is unusable.
+
+Against a public corpus of 11 known-malicious and 8 benign fixtures, the scanner catches 10 of the 11 malicious samples in the correct category. The one miss is a deliberately evasive sample, reported on purpose — that case is the argument for the human read. It also surfaces 6 of the 8 benign samples for manual review; those are false positives the five-persona reasoning pass is meant to clear, reported openly rather than hidden behind the recall headline (precision ≈ 63%).
+
+The full numbers — recall, false-positive rate, and precision — are versioned in [`benchmark/RESULTS.md`](benchmark/RESULTS.md) and regenerated on every ruleset change with `bash benchmark/run_benchmark.sh --results`. Post-release evasions that beat the scanner are welcome as PRs into [`benchmark/fixtures/community/`](benchmark/fixtures/community/), so the corpus grows with real-world attempts instead of freezing at launch.
 
 Run it yourself with `bash benchmark/run_benchmark.sh`. Nothing in the fixtures folder is ever executed.
 
