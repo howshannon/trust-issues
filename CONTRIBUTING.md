@@ -18,6 +18,22 @@ examples of bad code to catch**. Attackers iterate monthly, so this project is n
 - **A benign fixture** that a naive rule would wrongly panic about, to keep us honest
   about the review workload.
 
+## Post-release evasions & versioned results
+
+Evasions that beat the scanner *after* release go in `benchmark/fixtures/community/` (same
+inert rules as the core corpus). The benchmark reports them separately under "Community
+evasions," so the corpus keeps growing with real-world attempts.
+
+The benchmark also reports **false positives and precision**, not just recall, and snapshots
+them to `benchmark/RESULTS.md`. Regenerate that file whenever you change a scanner rule:
+
+```bash
+bash benchmark/run_benchmark.sh --results
+```
+
+Commit the updated `RESULTS.md` alongside your ruleset change so the numbers stay traceable
+to a specific version.
+
 ## Ground rules
 
 1. **Read-only forever.** Nothing in this repo may execute the target under review.
